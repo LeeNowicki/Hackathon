@@ -262,6 +262,7 @@ const TimerScreen = ({
   isRunning,
   setIsRunning,
   completeCurrentTask,
+  skipToNextPhase,
   pomodorosCompleted,
   completedTasks
 }) => (
@@ -314,25 +315,35 @@ const TimerScreen = ({
                 </div>
               )}
 
-              <div className="flex gap-4 justify-center">
-                {currentTaskIndex !== null && (
-                  <>
-                    <button
-                      onClick={() => setIsRunning(!isRunning)}
-                      className="bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold py-4 px-10 rounded-xl hover:from-green-600 hover:to-emerald-600 transition-all duration-200 shadow-lg text-lg"
-                    >
-                      {isRunning ? '⏸ Pause' : '▶ Start'}
-                    </button>
-
-                    {timerMode === 'work' && (
+              <div className="flex flex-col gap-3 items-center">
+                <div className="flex gap-4 justify-center">
+                  {currentTaskIndex !== null && (
+                    <>
                       <button
-                        onClick={completeCurrentTask}
-                        className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold py-4 px-10 rounded-xl hover:from-blue-600 hover:to-cyan-600 transition-all duration-200 shadow-lg text-lg"
+                        onClick={() => setIsRunning(!isRunning)}
+                        className="bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold py-4 px-10 rounded-xl hover:from-green-600 hover:to-emerald-600 transition-all duration-200 shadow-lg text-lg"
                       >
-                        ✓ Complete Task
+                        {isRunning ? '⏸ Pause' : '▶ Start'}
                       </button>
-                    )}
-                  </>
+
+                      {timerMode === 'work' && (
+                        <button
+                          onClick={completeCurrentTask}
+                          className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold py-4 px-10 rounded-xl hover:from-blue-600 hover:to-cyan-600 transition-all duration-200 shadow-lg text-lg"
+                        >
+                          ✓ Complete Task
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
+                {currentTaskIndex !== null && (
+                  <button
+                    onClick={skipToNextPhase}
+                    className="text-orange-600 hover:text-orange-700 font-medium text-sm transition-all"
+                  >
+                    Skip to {timerMode === 'work' ? 'Break' : 'Focus Time'} →
+                  </button>
                 )}
               </div>
             </div>
@@ -465,12 +476,12 @@ function App() {
     easy: 1
   }
 
-  // Sort tasks by urgency then difficulty
+  // Sort tasks by urgency then difficulty (easier first within same urgency)
   const sortTasks = (tasksToSort) => {
     return [...tasksToSort].sort((a, b) => {
       const priorityDiff = priorityOrder[b.priority] - priorityOrder[a.priority]
       if (priorityDiff !== 0) return priorityDiff
-      return difficultyOrder[b.difficulty] - difficultyOrder[a.difficulty]
+      return difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty]
     })
   }
 
@@ -572,6 +583,13 @@ function App() {
     }
   }
 
+  // Skip to next timer phase
+  const skipToNextPhase = () => {
+    setIsRunning(false)
+    setTimeLeft(0)
+    handleTimerComplete()
+  }
+
   // Format time display
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60)
@@ -609,6 +627,7 @@ function App() {
       isRunning={isRunning}
       setIsRunning={setIsRunning}
       completeCurrentTask={completeCurrentTask}
+      skipToNextPhase={skipToNextPhase}
       pomodorosCompleted={pomodorosCompleted}
       completedTasks={completedTasks}
     />
